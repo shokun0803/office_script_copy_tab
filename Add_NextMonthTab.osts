@@ -1,0 +1,49 @@
+function main(workbook: ExcelScript.Workbook) {
+	let nextMonthly: Date = new Date();
+	let lastDayOfMonth: Date = new Date(nextMonthly.getFullYear(), nextMonthly.getMonth() + 1, 0);
+
+	// 年末だったら翌年1月のシートを作成
+	if (nextMonthly.getMonth() == 11) {
+		let sheetName: string = (nextMonthly.getFullYear() + 1) + "年1月";
+	} else {
+		// 日付を比較して月末を判定
+		if (nextMonthly.getDate() == lastDayOfMonth.getDate()) {
+			// getMonth は 0 ～ 11 なので来月は +2
+			let month: string = nextMonthly.getMonth() + 2
+		} else {
+			// getMonth は 0 ～ 11 なので今月は +1
+			let month: string = nextMonthly.getMonth() + 1
+		}
+		let sheetName: string = nextMonthly.getFullYear() + "年" + month + "月";
+	}
+	console.log(sheetName)
+	let createddSheet: ExcelScript.Worksheet = workbook.getWorksheet(sheetName);
+
+	if (createddSheet) {
+		console.log(sheetName)
+		console.log("すでにシートがあります！");
+		return;
+	}
+
+	// 年末だったら翌年のリストネームを作成
+	if (nextMonthly.getMonth() == 11) {
+		let nextYear: string = (nextMonthly.getFullYear() + 1);
+		let listName: string = "メイン_" + nextYear + "01";
+	} else {
+		let nextYear: string = nextMonthly.getFullYear();
+		let listName: string = "メイン_" + nextYear + (("0" + month).slice(-2));
+	}
+	// Duplicate worksheet
+	let selectedSheet: ExcelScript.Worksheet = workbook.getWorksheet("原本");
+	let newSheet = selectedSheet.copy(ExcelScript.WorksheetPositionType.before, selectedSheet);
+	// Rename worksheet
+	newSheet.setName(sheetName);
+	// Set range I3
+	newSheet.getRange("I3").setValue(nextYear);
+	// Set range L3
+	let TableName: string = newSheet.getTables()[0].getName();
+	newSheet.getRange("L3").setValue(month);
+	let newTable = workbook.getTable(TableName);
+	// Rename table
+	newTable.setName(listName);
+}
